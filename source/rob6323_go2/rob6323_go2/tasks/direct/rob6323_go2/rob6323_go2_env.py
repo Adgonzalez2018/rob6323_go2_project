@@ -25,8 +25,7 @@ from .rob6323_go2_env_cfg import Rob6323Go2EnvCfg
 
 class Rob6323Go2Env(DirectRLEnv):
     cfg: Rob6323Go2EnvCfg
-
-def __init__(self, cfg: Rob6323Go2EnvCfg, render_mode: str | None = None, **kwargs):
+    def __init__(self, cfg: Rob6323Go2EnvCfg, render_mode: str | None = None, **kwargs):
     super().__init__(cfg, render_mode, **kwargs)
 
     # Joint position command (deviation from default joint positions)
@@ -89,12 +88,12 @@ def __init__(self, cfg: Rob6323Go2EnvCfg, render_mode: str | None = None, **kwar
     self.clock_inputs = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device, requires_grad=False)
     self.desired_contact_states = torch.zeros(self.num_envs, 4, dtype=torch.float, device=self.device, requires_grad=False)
     
-	# Part 4.3
+    # Part 4.3
 	@property
 	def foot_positions_w(self) -> torch.Tensor:
-		# Return feet positions in the world frame
-		# Shape - (num_envs, num_feet, 3)
-		return self.robot.data.body_pos_w[:,self._feet_ids]
+    	# Return feet positions in the world frame
+    	# Shape - (num_envs, num_feet, 3)
+    	return self.robot.data.body_pos_w[:, self._feet_ids]
 
     def _setup_scene(self):
         self.robot = Articulation(self.cfg.robot_cfg)
