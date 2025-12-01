@@ -28,7 +28,49 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     observation_space = 48
     state_space = 0
     debug_vis = True
+    
+    # STABILITY
+    # reward scales: 
+    orient_reward_scale = -5.0
+    lin_vel_z_reward_scale = -0.02
+    ang_vel_xy_reward_scale = -.001
+    
+    # ACTION REGULARIZATION AND SMOOTHNESS
+    dof_vel_reward_scale = -.0001	# small val, penalize high joint velocities
+    torque_reward_scale = -.00001	# smalelr val, penalize high torques
+    
+    
+    # part 1
+    # reward scales
+    action_rate_reward_scale = -0.1
+    
+    # part 2
+    # PD control gains
+    Kp = 20.0				# proportional gain
+    Kd = .5					# derivative gain
+    torque_limits = 100.0	# Max torque
 
+	# update robot_cfg
+	robot_cfg: ArticulationCfg = UNITREE_GO2_CFG.replace(prim_path="/World/envs/env_.*/Robot")
+	# "base_legs" is an arbitrary key we use to group these actuators
+	robot_cfg.actuators["base_legs"] = ImplicitActuatorCfg(
+		joint_names_expr=[".*_hip_joint", ".*_thigh_joint", ".*_calf_joint"],
+		effort_limit=23.5,
+		velocity_limit=30.0,
+		stiffness=0.0,		# critical: set to 0 to disable implicit p-gain
+		damping=0.0,		# Critical: set to 0 to disable implicit d-gain
+	)
+
+	# part 3 
+	base_height_min = 0.2 	# terminate if base is lower than 20cm
+	
+	# part 4
+	observation_space = 48 + 4	# added 4 for clock inputs
+	
+	raibert_heuristic_reward_scale = -10.0
+	feet_clearance_reward_scale = -30.0
+	tracking_contacts_shaped_force_reward_scale = 4.0
+	
     # simulation
     sim: SimulationCfg = SimulationCfg(
         dt=1 / 200,
