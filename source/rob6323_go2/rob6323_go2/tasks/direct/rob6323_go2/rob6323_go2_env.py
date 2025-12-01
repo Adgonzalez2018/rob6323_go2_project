@@ -62,7 +62,7 @@ class Rob6323Go2Env(DirectRLEnv):
 		}
 		
 		# Get specific body indices
-		self._base_id, _ self._contact_sensor.find_bodies("base")
+		self._base_id, _ = self._contact_sensor.find_bodies("base")
 		
 		# add handle for debug visualization (this is set to a valid handle inside set_debug_vis)
 		self.set_debug_vis(self.cfg.debug_vis)
