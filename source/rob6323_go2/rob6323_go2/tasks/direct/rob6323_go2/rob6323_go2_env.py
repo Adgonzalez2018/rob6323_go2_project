@@ -93,10 +93,10 @@ class Rob6323Go2Env(DirectRLEnv):
     # Part 4.3
 	@property
 	def foot_positions_w(self) -> torch.Tensor:
-    	# Return feet positions in the world frame
-    	# Shape - (num_envs, num_feet, 3)
-    	return self.robot.data.body_pos_w[:, self._feet_ids]
-
+		# return feet positions in the world frame
+		# shape - (num_envs, num_feet, 3)
+		return self.robot.data.body_pos_w[:,self._feet_ids]
+		
     def _setup_scene(self):
         self.robot = Articulation(self.cfg.robot_cfg)
         self._contact_sensor = ContactSensor(self.cfg.contact_sensor)
