@@ -96,19 +96,19 @@ class Rob6323Go2Env(DirectRLEnv):
 		# return feet positions in the world frame
 		# shape - (num_envs, num_feet, 3)
 		return self.robot.data.body_pos_w[:,self._feet_ids]
-		
-    def _setup_scene(self):
-        self.robot = Articulation(self.cfg.robot_cfg)
-        self._contact_sensor = ContactSensor(self.cfg.contact_sensor)
-        # add ground plane
-        self.cfg.terrain.num_envs = self.scene.cfg.num_envs
-        self.cfg.terrain.env_spacing = self.scene.cfg.env_spacing
-        self._terrain = self.cfg.terrain.class_type(self.cfg.terrain)
-        # clone and replicate
-        self.scene.clone_environments(copy_from_source=False)
-        # we need to explicitly filter collisions for CPU simulation
-        if self.device == "cpu":
-            self.scene.filter_collisions(global_prim_paths=[])
+	
+	def _setup_scene(self):
+		self.robot = Articulation(self.cfg.robot_cfg)
+		self._contact_sensor = ContactSensor(self.cfg.contact_sensor)
+		# add ground plane
+		self.cfg.terrain.num_envs = self.scene.cfg.num_envs
+		self.cfg.terrain.env_spacing = self.scene.cfg.env_spacing
+		self._terrain = self.cfg.terrain.class_type(self.cfg.terrain)
+		# clone and replicate
+		self.scene.clone_environments(copy_from_source=False)
+		# we need to explicitly filter collisions for CPU simulation
+		if self.device == "cpu":
+			self.scene.filter_collisions(global_prim_paths=[])
         # add articulation to scene
         self.scene.articulations["robot"] = self.robot
         # add lights
