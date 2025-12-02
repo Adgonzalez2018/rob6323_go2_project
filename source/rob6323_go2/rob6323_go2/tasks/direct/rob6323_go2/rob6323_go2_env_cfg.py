@@ -39,6 +39,13 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     dof_vel_reward_scale = -0.0001   # small val, penalize high joint velocities
     torque_reward_scale = -0.00001   # smaller val, penalize high torques
     
+    # BONUS PART 1
+    # Actuator friction params
+    friction_enabled = True	# set to False to disable friction
+    mu_v_range = (0.0, 0.3)	# Viscous friction range
+    F_s_range = (0.0,2.5)	# Stiction friction range
+    
+    
     # part 1
     # reward scales
     action_rate_reward_scale = -0.1

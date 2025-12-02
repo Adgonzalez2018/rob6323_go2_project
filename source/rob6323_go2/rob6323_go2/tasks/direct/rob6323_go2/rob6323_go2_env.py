@@ -28,6 +28,12 @@ class Rob6323Go2Env(DirectRLEnv):
     def __init__(self, cfg: Rob6323Go2EnvCfg, render_mode: str | None = None, **kwargs):
         super().__init__(cfg, render_mode, **kwargs)
         
+        # Bonus: actuator friction model
+        if self.cfg_friction_enabled:
+        	# per-environment friction coeff (will be randomized on reset)
+        	self.mu_v = torch.zeros(self.num_envs, 12, device=self.device)
+        	self.F_s = torch.zeros(self.num_envs, 12, device=self.device)
+        	
         # joint position command (deviation from default joint positions)
         self._actions = torch.zeros(self.num_envs, gym.spaces.flatdim(self.single_action_space), device=self.device)
         self._previous_actions = torch.zeros(
@@ -129,6 +135,23 @@ class Rob6323Go2Env(DirectRLEnv):
             self.torque_limits,
         )
         
+        # BONUS PART 1: apply actuator friction model
+        if self.cfg.friction_enabled:
+        	# get joint velocities
+        	joint_vel = self.robot.data.joint_vel	# shape: (num_envs, 12)
+        	
+        	# compute friction torques
+        	tau_stiction = self.F_s * torch.tanh(joint_vel / .1)
+        	tau_viscous = self.mu_v * joint_vel
+        	tau_friction = tau_stiction + tau_viscous
+        	
+        	# subtract friction from PD torques
+        	torques = torques - tau_friction
+        	
+        	# re clip after friction
+        	torques = torch.clip(torques, -self.torque_limits, self.torque_limits)
+        	
+        # store for reward calculation
         # ACTION REGULARIZATION & SMOOTHNESS - store for reward calc
         self.applied_torques = torques.clone()
         
@@ -237,6 +260,17 @@ class Rob6323Go2Env(DirectRLEnv):
         if len(env_ids) == self.num_envs:
             # Spread out the resets to avoid spikes in training
             self.episode_length_buf[:] = torch.randint_like(self.episode_length_buf, high=int(self.max_episode_length))
+        
+        # Bonus Part 1: randomize coeff per episode
+        if self.cfg.friction_enabled:
+        	# sample uniform random values for each joint of reset environments
+        	self.mu_v[env_ids] = torch.rand(len(env_ids),12,device=self.device)* \
+        							(self.cfg.mu_v_range[1] - self.cfg_mu_v_range[0]) + \
+        							self.cfg.mu_v_range[0]
+        	self.F_s[env_ids] = torch.rand(len(env_ids), 12, device=self.device) * \
+        							(self.cfg.F_s_range[1] - self.cfg.F_s_range[0]) + \
+        							self.cfg.F_s_range[0]
+        							
         
         # part 1.3
         self._actions[env_ids] = 0.0
