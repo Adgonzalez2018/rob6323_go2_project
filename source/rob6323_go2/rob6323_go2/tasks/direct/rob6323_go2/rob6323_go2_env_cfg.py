@@ -14,9 +14,9 @@ from isaaclab.utils import configclass
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.sensors import ContactSensorCfg
 from isaaclab.markers import VisualizationMarkersCfg
-from isaaclab.actuators import ImplicitActuatorCfg  # Fixed import
+from isaaclab.actuators import ImplicitActuatorCfg 
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
-
+from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG # key import for bonus part 2
 @configclass
 class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # env
