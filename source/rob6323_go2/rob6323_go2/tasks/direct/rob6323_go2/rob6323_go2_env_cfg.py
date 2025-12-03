@@ -14,9 +14,9 @@ from isaaclab.utils import configclass
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.sensors import ContactSensorCfg
 from isaaclab.markers import VisualizationMarkersCfg
-from isaaclab.actuators import ImplicitActuatorCfg 
+from isaaclab.actuators import ImplicitActuatorCfg  # Fixed import
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
-from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG # key import for bonus part 2
+
 @configclass
 class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # env
@@ -38,6 +38,13 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # ACTION REGULARIZATION AND SMOOTHNESS
     dof_vel_reward_scale = -0.0001   # small val, penalize high joint velocities
     torque_reward_scale = -0.00001   # smaller val, penalize high torques
+    
+    # BONUS PART 1
+    # Actuator friction params
+    friction_enabled = True	# set to False to disable friction
+    mu_v_range = (0.0, 0.3)	# Viscous friction range
+    F_s_range = (0.0,2.5)	# Stiction friction range
+    
     
     # part 1
     # reward scales
@@ -70,13 +77,9 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
         ),
     )
     
-    # BONUS PART 2 - ADDED TERRAIN 
-    # altered
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="generator",				# changed from "plane"
-        terrain_generator=ROUGH_TERRAINS_CFG, 	# Use isaac lab's terrain generator
-        max_init_terrain_level = 5,
+        terrain_type="plane",
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
