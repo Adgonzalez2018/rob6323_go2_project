@@ -265,7 +265,7 @@ class Rob6323Go2Env(DirectRLEnv):
         if self.cfg.friction_enabled:
         	# sample uniform random values for each joint of reset environments
         	self.mu_v[env_ids] = torch.rand(len(env_ids),12,device=self.device)* \
-        							(self.cfg.mu_v_range[1] - self.cfg_mu_v_range[0]) + \
+        							(self.cfg.mu_v_range[1] - self.cfg_mu.v_range[0]) + \
         							self.cfg.mu_v_range[0]
         	self.F_s[env_ids] = torch.rand(len(env_ids), 12, device=self.device) * \
         							(self.cfg.F_s_range[1] - self.cfg.F_s_range[0]) + \
