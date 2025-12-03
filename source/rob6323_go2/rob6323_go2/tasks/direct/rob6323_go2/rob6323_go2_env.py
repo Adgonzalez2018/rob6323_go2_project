@@ -29,7 +29,7 @@ class Rob6323Go2Env(DirectRLEnv):
         super().__init__(cfg, render_mode, **kwargs)
         
         # Bonus: actuator friction model
-        if self.cfg_friction_enabled:
+        if self.cfg.friction_enabled:
         	# per-environment friction coeff (will be randomized on reset)
         	self.mu_v = torch.zeros(self.num_envs, 12, device=self.device)
         	self.F_s = torch.zeros(self.num_envs, 12, device=self.device)
