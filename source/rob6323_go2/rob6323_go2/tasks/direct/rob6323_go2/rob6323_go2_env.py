@@ -43,6 +43,13 @@ class Rob6323Go2Env(DirectRLEnv):
         # X/Y linear velocity and yaw angular velocity commands
         self._commands = torch.zeros(self.num_envs, 3, device=self.device)
         
+        # BONUS PART 2: Push recovery
+        # push recovery tracking
+        if self.cfg.push_recovery_enabled:
+        	self.push_timer = torch.zeros(self.num_envs, dtype=torch.int, device=self.device)
+        
+        
+        
         # logging
         self._episode_sums = {
             key: torch.zeros(self.num_envs, dtype=torch.float, device=self.device)
@@ -260,6 +267,11 @@ class Rob6323Go2Env(DirectRLEnv):
         # part 1.3 - Reset last actions
         self.last_actions[env_ids] = 0.0
         
+        # BONUS PART 2: Push recovery
+        # reset push timer
+        if self.cfg_push_recovery_enabled:
+        	self.push_timer[env_ids] = 0
+        
         # Logging
         extras = dict()
         for key in self._episode_sums.keys():
@@ -274,6 +286,58 @@ class Rob6323Go2Env(DirectRLEnv):
         extras["Episode_Termination/time_out"] = torch.count_nonzero(self.reset_time_outs[env_ids]).item()
         self.extras["log"].update(extras)
         
+        
+    # BONUS PART 2: PUSH RECOVERY
+    # Apply push disturbances
+    def _apply_push_disturbance(self):
+    	# apply random pushes to test recovery
+    	if not self.cfg.push_recovery_enabled:
+    		return
+    	
+    	# increment timer
+    	self.push_timer += 1
+    	
+    	# find environments where push should've applied
+    	push_envs = (self.push_timer >= self.cfg.push_interval).nonzero(squeeze=True)
+    	
+    	if len(push_envs) > 0:
+    		# random push direction and magnitude
+    		push_magnitude = torch.rand(len(push_envs), device=self.device) * \
+    							(self.cfg.push_force_range[1] - self.cfg.push_force_range[0]) + \
+    							self.cfg.push_force_range[0]
+    		
+    		push_angle = torch.rand(len(push_envs), device = self.device) * 2 * 3.14159
+    		
+    		# convert to XY forces
+    		push_forces = torch.zeros(len(push_envs), 3, device=self.device)
+    		push_forces[:, 0] = push_magnitude * torch.cos(push_angle)
+    		push_forces[:, 1] = push_magnitude * torch.sin(push_angle)
+    		push_forces[:, 2] = 0.0	# no vertical pushes
+    		
+    		self.robot.set_external_force_and_torque(
+    			push.forces,
+    			torch.zeros_like(push_forces),
+    			body_ids = self._base_id,
+    			env_ids=push_envs
+    		)
+    		
+    		# reset timer for these environments
+    		self.push_timer[push_envs] = 0
+    		
+	
+	# BONUS PART 2: Push recovery
+	def _pre_physics_step(self, actions: torch.Tensor)->None:
+		self._actions = actions.clone()
+		
+		# apply push disturbances
+		self._apply_push_disturbance()
+		
+		# compute desired joint positions from policy action
+		self.desired_joint_pos = (
+			self.cfg.action_scale * self._actions
+			+ self.robot.data.default_joint_pos
+		)
+		
     def _step_contact_targets(self):
         # Defines contact plan
         frequencies = 3.0
