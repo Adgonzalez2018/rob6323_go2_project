@@ -337,7 +337,7 @@ class Rob6323Go2Env(DirectRLEnv):
 			self.cfg.action_scale * self._actions
 			+ self.robot.data.default_joint_pos
 		)
-		
+	
     def _step_contact_targets(self):
         # Defines contact plan
         frequencies = 3.0
