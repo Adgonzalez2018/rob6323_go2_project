@@ -301,6 +301,10 @@ class Rob6323Go2Env(DirectRLEnv):
         push_envs = (self.push_timer >= self.cfg.push_interval).nonzero(as_tuple=False).squeeze(-1)
         
         if len(push_envs) > 0:
+        	# create zero forces for ALL environments
+        	push_forces = torch.zeros(self.num_envs, 3, device=self.device)
+        	push_torques = torch.zeros(self.num_envs, 3, device=self.device)
+        	
             # random push direction and magnitude
             push_magnitude = torch.rand(len(push_envs), device=self.device) * \
                                 (self.cfg.push_force_range[1] - self.cfg.push_force_range[0]) + \
@@ -316,9 +320,8 @@ class Rob6323Go2Env(DirectRLEnv):
             
             self.robot.set_external_force_and_torque(
                 push_forces,
-                torch.zeros_like(push_forces),
+                push_torques,
                 body_ids = self._base_id,
-                env_ids=push_envs
             )
             
             # reset timer for these environments
