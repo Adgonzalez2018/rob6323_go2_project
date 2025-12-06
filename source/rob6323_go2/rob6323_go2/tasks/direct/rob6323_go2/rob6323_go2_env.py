@@ -302,28 +302,31 @@ class Rob6323Go2Env(DirectRLEnv):
         push_envs = (self.push_timer >= self.cfg.push_interval).nonzero(as_tuple=False).squeeze(-1)
 
         if len(push_envs) > 0:
-            # create zero forces for ALL environments
-            push_forces = torch.zeros(self.num_envs, 3, device=self.device)
-            push_torques = torch.zeros(self.num_envs, 3, device=self.device)
-
-            # random push direction and magnitude (for the selected envs)
+            # random push direction and magnitude
             push_magnitude = torch.rand(len(push_envs), device=self.device) * (
                 self.cfg.push_force_range[1] - self.cfg.push_force_range[0]
             ) + self.cfg.push_force_range[0]
 
             push_angle = torch.rand(len(push_envs), device=self.device) * 2.0 * math.pi
 
-            # convert to XY forces
-            env_forces = torch.zeros(self.num_envs, 3, device=self.device)
-            env_forces[push_envs, 0] = push_magnitude * torch.cos(push_angle)
-            env_forces[push_envs, 1] = push_magnitude * torch.sin(push_angle)
-            env_forces[push_envs, 2] = 0.0  # no vertical pushes
-
-            self.robot.set_external_force_and_torque(
-                env_forces,
-                push_torques,
-                body_ids=self._base_id,
-            )
+            # apply impulse by directly modifying root velocity
+            # convert force to velocity change (impulse/mass, assuming dt and mass scale)
+            velocity_change = torch.zeros(len(push_envs),3,device=self.device)
+        	velocity_change[:, 0] = (push_magnitude / 100.0) * torch.cos(push_angle)	# scale down
+        	velocity_change[:, 1] = (push_magnitude / 100.0) * torch.sin(push_angle)
+        	velocity_change[:, 2] = 0.0
+        	
+        	# get current root velocity
+        	current_vel = self.robot.data.root_lin_vel_w[push_envs].clone()
+        	
+        	# add the push
+        	new_vel = current_vel + velocity_change
+        	
+        	# write back the modified velocity
+        	self.robot.write_root_veloicty_to_sim(
+        		torch.cat([new_vel, self.robot.data.root_ang_vel_w[push_envs]], dim=1)
+        		env_ids=push_envs
+        	)
 
             # reset timer for these environments
             self.push_timer[push_envs] = 0
