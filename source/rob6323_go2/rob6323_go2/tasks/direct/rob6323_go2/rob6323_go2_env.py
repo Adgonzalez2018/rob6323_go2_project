@@ -288,7 +288,6 @@ class Rob6323Go2Env(DirectRLEnv):
         
         
     # BONUS PART 2: PUSH RECOVERY
-    # BONUS PART 2: PUSH RECOVERY
     # Apply push disturbances
     def _apply_push_disturbance(self):
         # apply random pushes to test recovery
@@ -312,21 +311,21 @@ class Rob6323Go2Env(DirectRLEnv):
             # apply impulse by directly modifying root velocity
             # convert force to velocity change (impulse/mass, assuming dt and mass scale)
             velocity_change = torch.zeros(len(push_envs),3,device=self.device)
-        	velocity_change[:, 0] = (push_magnitude / 100.0) * torch.cos(push_angle)	# scale down
-        	velocity_change[:, 1] = (push_magnitude / 100.0) * torch.sin(push_angle)
-        	velocity_change[:, 2] = 0.0
-        	
-        	# get current root velocity
-        	current_vel = self.robot.data.root_lin_vel_w[push_envs].clone()
-        	
-        	# add the push
-        	new_vel = current_vel + velocity_change
-        	
-        	# write back the modified velocity
-        	self.robot.write_root_veloicty_to_sim(
-        		torch.cat([new_vel, self.robot.data.root_ang_vel_w[push_envs]], dim=1)
-        		env_ids=push_envs
-        	)
+            velocity_change[:, 0] = (push_magnitude / 15.0) * torch.cos(push_angle)    # scale down
+            velocity_change[:, 1] = (push_magnitude / 15.0) * torch.sin(push_angle)
+            velocity_change[:, 2] = push_magnitude / 80 # small vertical for visibility
+            
+            # get current root velocity
+            current_vel = self.robot.data.root_lin_vel_w[push_envs].clone()
+            
+            # add the push
+            new_vel = current_vel + velocity_change
+            
+            # write back the modified velocity
+            self.robot.write_root_velocity_to_sim(
+                torch.cat([new_vel, self.robot.data.root_ang_vel_w[push_envs]], dim=1),
+                env_ids=push_envs
+            )
 
             # reset timer for these environments
             self.push_timer[push_envs] = 0

@@ -41,8 +41,8 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     
     # BONUS PART 2: Push recovery parameters
     push_recovery_enabled = True
-    push_interval = 100				# apply push every N steps
-    push_force_range = (10.0,50.0) 	# random force magnitude
+    push_interval = 50				# apply push every N steps
+    push_force_range = (25.0,75.0) 		# random force magnitude
     
     # part 1
     # reward scales
