@@ -42,7 +42,7 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     # BONUS PART 2: Push recovery parameters
     push_recovery_enabled = True
     push_interval = 50				# apply push every N steps
-    push_force_range = (25.0,75.0) 		# random force magnitude
+    push_force_range = (5.0,60.0) 		# random force magnitude
     
     # part 1
     # reward scales
@@ -55,8 +55,8 @@ class Rob6323Go2EnvCfg(DirectRLEnvCfg):
     torque_limits = 100.0    # Max torque
 
     # part 3 
-    base_height_min = 0.2    # terminate if base is lower than 20cm
-    
+    #base_height_min = 0.2    # terminate if base is lower than 20cm
+    base_height_min = .05
     # part 4
     raibert_heuristic_reward_scale = -10.0
     feet_clearance_reward_scale = -30.0
